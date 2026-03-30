@@ -1,0 +1,3 @@
+#!/bin/bash
+# Wrapper script to run gt-iconscaler
+exec /path/to/gt-iconscaler "$@"
