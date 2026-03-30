@@ -1,34 +1,28 @@
 #!/bin/bash
 
-# Script to install the GT-IconScaler
+# Update the icon installation, binary placement, and menu shortcuts
 
-echo "Welcome to the GT-IconScaler Installation!"
+# Function to install icons
+install_icons() {
+    echo "Installing icons..."
+    # Your icon installation commands here
+}
 
-echo "Please choose your installation option:"
-echo "1. CLI Version"
-echo "2. GUI Version"
-echo "3. Both Versions"
+# Function to place binaries
+place_binaries() {
+    echo "Placing binaries..."
+    # Your binary placement commands here
+}
 
-read -p "Enter your choice (1/2/3): " choice
+# Function to create menu shortcuts
+create_shortcuts() {
+    echo "Creating menu shortcuts..."
+    # Your menu shortcut creation commands here
+}
 
-case $choice in
-  1)
-    echo "Installing CLI version..."
-    # Command to install CLI version
-  ;;  
-  2)
-    echo "Installing GUI version..."
-    # Command to install GUI version
-  ;;  
-  3)
-    echo "Installing both versions..."
-    # Commands to install both versions
-  ;;  
-  *)
-    echo "Invalid choice. Please run the script again."
-    exit 1
-  ;;
-
-esac
+# Main execution flow
+install_icons
+place_binaries
+create_shortcuts
 
 echo "Installation complete!"
