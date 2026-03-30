@@ -1,28 +1,28 @@
 #!/bin/bash
 
-# Update the icon installation, binary placement, and menu shortcuts
+# GT-IconScaler Installation Script
 
-# Function to install icons
-install_icons() {
-    echo "Installing icons..."
-    # Your icon installation commands here
-}
+# Update package list and install dependencies
+sudo apt update
 
-# Function to place binaries
-place_binaries() {
-    echo "Placing binaries..."
-    # Your binary placement commands here
-}
+# Copy icons to the corresponding directories
+sudo cp -r GT-IconScaler-CLI-ICON-icons/* /usr/share/icons/
+sudo cp -r GT-IconScaler-GUI-ICON-icons/* /usr/share/icons/
 
-# Function to create menu shortcuts
-create_shortcuts() {
-    echo "Creating menu shortcuts..."
-    # Your menu shortcut creation commands here
-}
+# Make binaries executable and place them in /usr/local/bin/
+sudo cp -r bin/* /usr/local/bin/
+sudo chmod +x /usr/local/bin/*
 
-# Main execution flow
-install_icons
-place_binaries
-create_shortcuts
+# Setup desktop entry
+cat <<EOF | sudo tee /usr/share/applications/gt-iconscaler.desktop
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=GT-IconScaler
+Exec=gt-iconscaler
+Icon=/usr/share/icons/gt-iconscaler-icon.png
+Terminal=false
+Categories=Utility;
+EOF
 
 echo "Installation complete!"
