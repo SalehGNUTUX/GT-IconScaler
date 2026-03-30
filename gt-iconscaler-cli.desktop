@@ -1,0 +1,17 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=GT-IconScaler CLI
+Comment=Convert and generate icon sizes for your project (CLI Version)
+Exec=gt-iconscaler-cli
+Icon=gt-iconscaler-cli
+Terminal=true
+Categories=Utility;Development;Graphics;
+Keywords=icon;scaler;converter;graphics;
+GenericName=Icon Scaler
+StartupNotify=false
+
+# Arabic translations
+Name[ar]=GT-IconScaler - سطر الأوامر
+Comment[ar]=تحويل وتوليد أحجام أيقونات مختلفة لمشروعك (نسخة سطر الأوامر)
+GenericName[ar]=برنامج تحويل الأيقونات
