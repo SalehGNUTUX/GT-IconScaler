@@ -1,7 +1,7 @@
+<div align="center">
+  
 # GT-IconScaler v2.0
 
-<div dir="rtl" align="center">
-  
 **أداة احترافية لتوليد وتحويل الأيقونات لجميع المنصات (CLI وGUI)**
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
@@ -10,21 +10,6 @@
 [![Version](https://img.shields.io/badge/Version-2.0-red.svg)]()
 
 </div>
-
----
-
-## 📋 جدول المحتويات
-- [المميزات](#المميزات)
-- [المتطلبات](#المتطلبات)
-- [التثبيت السريع](#التثبيت-السريع)
-- [طرق التثبيت التفصيلية](#طرق-التثبيت-التفصيلية)
-- [الاستخدام](#الاستخدام)
-- [المنصات المدعومة](#المنصات-المدعومة)
-- [هيكل المخرجات](#هيكل-المخرجات)
-- [حل المشاكل](#حل-المشاكل)
-- [إزالة التثبيت](#إزالة-التثبيت)
-- [المساهمة والتطوير](#المساهمة-والتطوير)
-- [الترخيص](#الترخيص)
 
 ---
 
@@ -92,33 +77,6 @@ chmod +x GT-IconScaler.sh GT-IconScaler-GUI.sh
 
 ---
 
-## 📖 طرق التثبيت التفصيلية
-
-### 🔹 التثبيت النظامي (لجميع المستخدمين)
-```bash
-git clone https://github.com/SalehGNUTUX/GT-IconScaler.git
-cd GT-IconScaler
-sudo bash install.sh
-```
-سيتم تثبيت الأداة في `/usr/local/bin/` وستكون متاحة لجميع المستخدمين.
-
-### 🔹 التثبيت المحلي (للمستخدم الحالي فقط)
-```bash
-git clone https://github.com/SalehGNUTUX/GT-IconScaler.git
-cd GT-IconScaler
-bash install.sh
-```
-سيتم التثبيت في `~/.local/bin/` وسيتم إضافة هذا المسار إلى PATH تلقائياً.
-
-### 🔹 التثبيت عبر مستودع AUR (Arch Linux)
-```bash
-yay -S gt-iconscaler-git
-# أو
-paru -S gt-iconscaler-git
-```
-
----
-
 ## 💻 الاستخدام
 
 ### 🖥️ النسخة الطرفية (CLI)
@@ -137,15 +95,6 @@ gt-iconscaler
 gt-iconscaler-gui
 ```
 ستظهر نافذة رسومية باستخدام zenity لتوجيهك خلال جميع الخطوات بسهولة.
-
-### 📝 أمثلة عملية
-```bash
-# استخدام مباشر مع مسار الملف
-./GT-IconScaler.sh /path/to/icon.png /output/directory
-
-# تشغيل الواجهة الرسومية مع تحديد حجم النافذة
-zenity --width=800 --height=600 --file-selection
-```
 
 ---
 
@@ -311,13 +260,16 @@ chmod +x *.sh
 **GNUtux (SalehGNUTUX)**  
 - 🌐 [GitHub](https://github.com/SalehGNUTUX)
 - 📧 [saleh@gnutux.com](mailto:saleh@gnutux.com)
-- 🐦 [@gnutux](https://twitter.com/gnutux)
 
 ---
 
-<div dir="rtl" align="center">
+<div align="center">
 
 **⭐ إذا أعجبك المشروع، لا تنسَ وضع نجمة على GitHub!**  
 **شكراً لاستخدامك GT-IconScaler**
+
+---
+
+*آخر تحديث: 30 مارس 2026*
 
 </div>
