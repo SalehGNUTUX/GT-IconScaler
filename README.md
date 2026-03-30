@@ -1,91 +1,97 @@
-# GT-IconScaler
+# GT-IconScaler v2.0
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
-**أداة مجانية لتحويل وتوليد مختلف أحجام أيقونات المشاريع البرمجية (CLI وواجهة رسومية GUI)، وتثبيتها بشكل متكامل مع النظام (أيقونات، اختصارات قائمة التطبيقات، دعم إزالة التثبيت بسهولة).**
+**أداة احترافية لتوليد وتحويل الأيقونات لجميع المنصات (CLI وGUI).**
 
 ---
 
-## ⭐ نظرة سريعة
+## 🚀 التثبيت السريع
 
-- دعم توليد الأيقونات لمختلف الحزم (Linux, Windows, Mac)
-- نسخة سطر أوامر (CLI) وواجهة رسومية (GUI)
-- تكامل كامل مع قوائم البرامج عبر ملفات `.desktop`
-- سكريبت تثبيت و إلغاء احترافي: يدير الأيقونات، الاختصارات، وإزالة كل شيء بنقرة
-
----
-
-## 🚀 التثبيت (Installation)
-
-**تثبيت مباشر من المستودع:**
+### الطريقة 1: من الإنترنت مباشرة
 ```bash
 bash <(curl -sSL https://raw.githubusercontent.com/SalehGNUTUX/GT-IconScaler/main/install.sh)
 ```
 
-**أو التثبيت التقليدي:**
+### الطريقة 2: التثبيت التقليدي
 ```bash
 git clone https://github.com/SalehGNUTUX/GT-IconScaler.git
 cd GT-IconScaler
-sudo ./install.sh
+sudo bash install.sh
 ```
-سيظهر لك سكريبت تفاعلي لاختيار التثبيت (CLI أو GUI أو كلاهما).
-
-**بعد التثبيت:**
-- شغل من القائمة أو بالأمر:
-    - الواجهة الرسومية:  
-      `gt-iconscaler-gui`
-    - سطر الأوامر:  
-      `gt-iconscaler-cli`
 
 ---
 
-## 🔧 إلغاء التثبيت (Uninstall)
+## 📋 المتطلبات
 
-لإزالة كل شيء (الأيقونات، الاختصارات، الملفات):
+- **ImageMagick** (مطلوب)
+- **zenity** (اختياري - للواجهة الرسومية)
 
+### تثبيت المتطلبات
+
+**Ubuntu/Debian:**
 ```bash
-sudo gt-iconscaler-uninstall
+sudo apt update
+sudo apt install imagemagick zenity
 ```
-ستحصل على تأكيد قبل الإزالة النهائية.
+
+**Fedora:**
+```bash
+sudo dnf install ImageMagick zenity
+```
+
+**Arch:**
+```bash
+sudo pacman -S imagemagick zenity
+```
 
 ---
 
-## 📦 مميزات رئيسية (Main features)
+## 💻 الاستخدام
 
-- تثبيت أوتوماتيكي للأيقونات بجميع الأحجام القياسية
-- إنشاء ملفات `.desktop` للبحث والتشغيل من القائمة
-- سكريبت تثبيت احترافي بواجهة ملونة ودعم عربي–إنجليزي
-- سكريبت إلغاء تثبيت ينظف كل شيء تماما
-- خفيف وسهل ويعمل على الغالبية العظمى من توزيعات لينكس
-
----
-
-## 🔥 أمثلة للاستخدام (Usage examples)
-
-### سطر الأوامر (CLI)
 ```bash
-gt-iconscaler-cli --input=myicon.png --sizes=16,32,48,64,128,256,512
-```
+# النسخة الطرفية
+gt-iconscaler
 
-### الواجهة الرسومية (GUI)
-ابحث في قائمة البرامج عن  
-**GT-IconScaler GUI**  
-أو شغل:
-```bash
+# النسخة الرسومية
 gt-iconscaler-gui
 ```
 
 ---
 
-## 🏷️ تراخيص (License)
-[GPL-3.0](LICENSE)
+## ⚠️ حل المشاكل
+
+### خطأ: "الدليل './src' غير موجود"
+
+**الحل التلقائي:** سيتم إنشاء المجلدات تلقائياً.
+
+**الحل اليدوي:**
+```bash
+mkdir -p bin src GT-IconScaler-CLI-ICON-icons GT-IconScaler-GUI-ICON-icons
+```
+
+### خطأ: "ImageMagick غير مثبت"
+
+ثبّت ImageMagick (انظر أعلى).
 
 ---
 
-## ❤️ ساهم أو تواصل (Contribute / Contact)
-- [SalehGNUTUX على GitHub](https://github.com/SalehGNUTUX)
-- الاقتراحات/الدعم: افتح Issue جديد في الريبو
+## ✨ الميزات
+
+- ✅ 31 حجم أيقونة (16px - 1024px)
+- ✅ 7 منصات (Linux, PWA, Android, iOS, Windows, macOS, Electron)
+- ✅ واجهات CLI و GUI
+- ✅ دعم عربي كامل
+- ✅ تثبيت آلي
 
 ---
 
-**السكريبتات والوثائق تدعم العربية بشكل كامل، وتم تبسيط كل الأوامر!**
+## 📜 الترخيص
+
+GPL-3.0 - انظر [LICENSE](LICENSE)
+
+---
+
+**للمساعدة:** فتح issue في المستودع
+
+
