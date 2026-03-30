@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# This script acts as a wrapper for the GUI version of the GT-IconScaler
+
+java -jar /path/to/gt-iconscaler-gui.jar
