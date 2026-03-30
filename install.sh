@@ -1,28 +1,33 @@
 #!/bin/bash
 
-# GT-IconScaler Installation Script
+# Function to check if a directory exists
+check_directory() {
+    if [ ! -d "$1" ]; then
+        echo "خطأ: الدليل '$1' غير موجود." >&2
+        exit 1
+    fi
+}
 
-# Update package list and install dependencies
-sudo apt update
+# Validate required directories
+check_directory "./src"
+check_directory "./bin"
+check_directory "./lib"
 
-# Copy icons to the corresponding directories
-sudo cp -r GT-IconScaler-CLI-ICON-icons/* /usr/share/icons/
-sudo cp -r GT-IconScaler-GUI-ICON-icons/* /usr/share/icons/
+# Validate requirements
+REQUIRED_PACKAGES=("curl" "git" "make")
+for pkg in "${REQUIRED_PACKAGES[@]}"; do
+    if ! command -v $pkg &> /dev/null; then
+        echo "خطأ: حزمة '$pkg' مطلوبة ولكنها غير مثبتة." >&2
+        exit 1
+    fi
+done
 
-# Make binaries executable and place them in /usr/local/bin/
-sudo cp -r bin/* /usr/local/bin/
-sudo chmod +x /usr/local/bin/*
+# Main installation process
 
-# Setup desktop entry
-cat <<EOF | sudo tee /usr/share/applications/gt-iconscaler.desktop
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=GT-IconScaler
-Exec=gt-iconscaler
-Icon=/usr/share/icons/gt-iconscaler-icon.png
-Terminal=false
-Categories=Utility;
-EOF
+# Place your installation commands here, for example:
+if ! make; then
+    echo "خطأ: فشل في تنفيذ الأمر 'make'." >&2
+    exit 1
+fi
 
-echo "Installation complete!"
+echo "تم التثبيت بنجاح!"
