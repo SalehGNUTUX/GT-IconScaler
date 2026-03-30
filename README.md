@@ -9,6 +9,10 @@
 [![Linux](https://img.shields.io/badge/Platform-Linux-yellow.svg)](https://www.linux.org/)
 [![Version](https://img.shields.io/badge/Version-2.0-red.svg)]()
 
+
+| شعار نسخة الطرفية | شعار نسخة الواجهة| 
+| :--- | :---: |
+| ![نص بديل](https://github.com/SalehGNUTUX/GT-IconScaler/blob/main/GT-IconScaler-CLI-ICON-icons/all/256x256/GT-IconScaler-CLI-ICON.png?raw=true) | ![نص بديل](https://github.com/SalehGNUTUX/GT-IconScaler/blob/main/GT-IconScaler-GUI-ICON-icons/all/256x256/GT-IconScaler-GUI-ICON.png?raw=true) |
 </div>
 
 ---
