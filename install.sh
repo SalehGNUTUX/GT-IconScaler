@@ -1,8 +1,9 @@
 #!/bin/bash
 # ============================================================
-# GT-IconScaler Installer v2.0
+# GT-IconScaler Installer v2.0 (Full)
 # يقوم بتثبيت الأداة وفحص المتطلبات تلقائياً
 # يدعم: apt, dnf, pacman, zypper
+# يقوم بتحميل الملفات المفقودة من المستودع إذا لزم الأمر
 # ============================================================
 
 set -euo pipefail
@@ -81,7 +82,7 @@ check_requirements() {
 }
 
 # ────────────────────────────────────────────────────────────
-# إنشاء المجلدات الأساسية (اختياري)
+# إنشاء المجلدات الأساسية (للتوافق مع السكربتات القديمة)
 # ────────────────────────────────────────────────────────────
 create_dirs() {
     local dirs=(bin src include lib)
@@ -120,7 +121,20 @@ setup_install_paths() {
 }
 
 # ────────────────────────────────────────────────────────────
-# تثبيت السكربتات
+# تحميل ملف من المستودع إذا لم يكن موجوداً
+# ────────────────────────────────────────────────────────────
+download_if_missing() {
+    local file="$1"
+    local base_url="https://raw.githubusercontent.com/SalehGNUTUX/GT-IconScaler/main"
+    if [[ ! -f "$file" ]]; then
+        info "تحميل $file من المستودع..."
+        curl -sSL -o "$file" "$base_url/$file" || return 1
+    fi
+    return 0
+}
+
+# ────────────────────────────────────────────────────────────
+# تثبيت السكربتات (تحميلها إذا لزم الأمر)
 # ────────────────────────────────────────────────────────────
 install_scripts() {
     local scripts=("GT-IconScaler.sh" "GT-IconScaler-GUI.sh")
@@ -129,23 +143,34 @@ install_scripts() {
     for i in "${!scripts[@]}"; do
         local src="${scripts[$i]}"
         local dst="${BIN_DIR}/${target_names[$i]}"
+        
+        # تحميل الملف إذا لم يكن موجوداً محلياً
+        if ! download_if_missing "$src"; then
+            warn "فشل تحميل $src. تخطي."
+            continue
+        fi
+        
         if [[ -f "$src" ]]; then
             cp "$src" "$dst"
             chmod +x "$dst"
             success "ثبّت: $dst"
         else
-            warn "الملف $src غير موجود في المجلد الحالي! تخطي."
+            warn "الملف $src غير موجود بعد المحاولة. تخطي."
         fi
     done
 }
 
 # ────────────────────────────────────────────────────────────
-# تثبيت أيقونة للتطبيق (اختياري)
+# تثبيت أيقونة التطبيق (تحميلها إذا لزم الأمر)
 # ────────────────────────────────────────────────────────────
 install_icon() {
     local icon_file="gt-iconscaler-gui.png"
+    
+    # تحميل الأيقونة إذا لم تكن موجودة
+    download_if_missing "$icon_file" || true
+    
+    # إذا لم تنجح التحميلة أو الملف لا يزال غير موجود، أنشئ أيقونة افتراضية
     if [[ ! -f "$icon_file" ]]; then
-        # إنشاء أيقونة افتراضية باستخدام ImageMagick إذا لم تكن موجودة
         if command -v convert &>/dev/null; then
             convert -size 128x128 xc:transparent -font DejaVu-Sans -pointsize 40 -fill black -gravity center -annotate 0 "🎨" "$icon_file" 2>/dev/null || true
         fi
@@ -224,13 +249,15 @@ print_summary() {
     echo ""
     echo -e "  ${YELLOW}ملاحظة:${NC} إذا لم تتعرف الطرفية على الأوامر، أعد تشغيلها أو نفذ:"
     echo "    source ~/.bashrc  (أو source ~/.zshrc)"
+    echo ""
+    echo -e "  ${BLUE}ملاحظة للأيقونة:${NC} إذا لم تظهر الأيقونة في قائمة البرامج، حاول تسجيل الخروج والدخول مرة أخرى."
 }
 
 # ────────────────────────────────────────────────────────────
 # البرنامج الرئيسي
 # ────────────────────────────────────────────────────────────
 main() {
-    echo -e "${BLUE}GT-IconScaler Installer v2.0${NC}"
+    echo -e "${BLUE}GT-IconScaler Installer v2.0 (Full)${NC}"
     echo ""
 
     # التحقق من المتطلبات الأساسية
@@ -242,10 +269,10 @@ main() {
     # تحديد مسارات التثبيت
     setup_install_paths
 
-    # تثبيت السكربتات
+    # تثبيت السكربتات (مع تحميلها إذا لزم الأمر)
     install_scripts
 
-    # تثبيت الأيقونة (اختياري)
+    # تثبيت الأيقونة (مع تحميلها إذا لزم الأمر)
     install_icon
 
     # إنشاء ملف .desktop للواجهة الرسومية
