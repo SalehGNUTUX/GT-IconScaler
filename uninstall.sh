@@ -20,7 +20,7 @@ warn()    { echo -e "${YELLOW}⚠${NC} $*" >&2; }
 # ────────────────────────────────────────────────────────────
 # الأسماء المثبّتة
 # ────────────────────────────────────────────────────────────
-BINARIES=("gt-iconscaler" "gt-iconscaler-gui")
+BINARIES=("gt-iconscaler" "gt-iconscaler-gui" "gt-iconscaler-cli-launcher")
 DESKTOP_FILES=("gt-iconscaler-cli.desktop" "gt-iconscaler-gui.desktop")
 ICON_NAMES=("gt-iconscaler-cli" "gt-iconscaler-gui")
 ICON_SIZES=(16 22 24 32 48 64 96 128 256 512)

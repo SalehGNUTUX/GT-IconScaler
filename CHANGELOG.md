@@ -21,6 +21,12 @@ All notable changes to this project will be documented in this file.
 - **Bug قديم في `gt_distribute`**: لم يكن يوزّع على المنصات الفرعية لأن entry scripts تضبط
   `IFS=$'\n\t'` فيفشل `for ep in $enabled_platforms`. النتيجة كانت 46 ملفاً بدل 111.
   أُصلح بإعلان `local IFS=$' \t\n'` داخل الدالة.
+- **النقر على CLI من قائمة البرامج لم يفعل شيئاً** على KDE/GNOME عندما لا يكون default terminal مضبوطاً.
+  أُصلح بـ wrapper script (`gt-iconscaler-cli-launcher`) يُولَّد تلقائياً وقت التثبيت ويكتشف terminal
+  متاح من بين 14 emulator مدعوم (konsole, gnome-terminal, xfce4-terminal, mate-terminal,
+  lxterminal, qterminal, deepin-terminal, io.elementary.terminal, tilix, alacritty, kitty,
+  terminator, foot, x-terminal-emulator, xterm). يحترم `$TERMINAL` و `xdg-terminal-exec`،
+  ويولي أولوية لـ terminal الـ DE الحالي.
 
 ### Changed — تغييرات
 - `banner.title` أصبح `GT-IconScaler v2.2`.
