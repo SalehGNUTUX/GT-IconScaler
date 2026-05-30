@@ -20,11 +20,18 @@ Both are bilingual (Arabic / English) and depend only on ImageMagick at runtime.
 GT_LANG=ar ./GT-IconScaler.sh      # language via env
 ./GT-IconScaler-GUI.sh             # Zenity GUI
 
-# Install / uninstall
-./install.sh                       # per-user (~/.local)
-sudo ./install.sh                  # system (/usr/local)
+# Install / uninstall (interactive by default — asks which version)
+./install.sh                       # per-user (~/.local), prompts CLI/GUI/both
+./install.sh --cli -y              # CLI only, no prompts
+./install.sh --gui -y              # Zenity GUI only, no prompts
+./install.sh --all -y              # both, no prompts (default when -y)
+sudo ./install.sh --all -y         # system (/usr/local), both
 ./uninstall.sh                     # per-user removal
 sudo ./uninstall.sh                # system removal
+
+# One-line install from anywhere (auto-bootstraps if files missing)
+bash <(curl -sSL https://raw.githubusercontent.com/SalehGNUTUX/GT-IconScaler/main/install.sh)
+bash <(curl -sSL .../install.sh) --cli -y   # flags pass through
 
 # Rebuild compiled i18n after editing i18n/{ar,en}.json
 ./i18n/build-bash.sh               # requires `jq` (build-time only)
@@ -110,8 +117,31 @@ The core lib also **must not depend on the caller's `IFS`**. Entry scripts set `
 
 `gt-iconscaler-cli.desktop` and `gt-iconscaler-gui.desktop` ship in the repo with placeholder `Exec=` lines. `install.sh` `sed`-rewrites `Exec=` and `TryExec=` to point at the resolved `BIN_DIR` (so the same `.desktop` works for user and system installs). Icons come from `GT-IconScaler-{CLI,GUI}-ICON-icons/all/${size}x${size}/...` and are installed into 10 hicolor sizes.
 
+**CLI launcher wrapper.** The CLI `.desktop` does **not** use `Terminal=true` directly — that fails silently on KDE/GNOME minimal installs when no default terminal is configured. Instead, `install.sh::install_cli_launcher()` generates `$BIN_DIR/gt-iconscaler-cli-launcher` (a bash wrapper auto-written at install time, not stored in the repo) that:
+1. Honors `$TERMINAL` env var if set.
+2. Tries `xdg-terminal-exec` (freedesktop spec) if installed.
+3. Picks a terminal matching `XDG_CURRENT_DESKTOP` (konsole for KDE, gnome-terminal for GNOME, etc.).
+4. Falls back through 14 emulators: konsole, gnome-terminal, xfce4-terminal, mate-terminal, lxterminal, qterminal, deepin-terminal, io.elementary.terminal, tilix, alacritty, kitty, terminator, foot, x-terminal-emulator, xterm.
+5. Runs `gt-iconscaler` inside a temp helper script with a "press any key" pause at the end (so users see the summary before the window closes).
+
+CLI `.desktop` becomes `Exec=$BIN_DIR/gt-iconscaler-cli-launcher` with `Terminal=false`. If you add a new terminal emulator, extend the `FALLBACK=()` array in `install_cli_launcher`.
+
+### Installer architecture
+
+`install.sh` is self-contained and supports three deployment paths:
+
+1. **Local clone**: `./install.sh [flags]` — reads files from `$SCRIPT_DIR`.
+2. **`curl | bash` bootstrap**: when the script is fetched from raw GitHub and all `REQUIRED_FILES` are missing, `bootstrap_from_remote()` git-clones the repo into a temp dir and `exec`s itself from there. `ORIG_ARGS` is forwarded so user flags survive the bootstrap.
+3. **System install** (`sudo`): `setup_install_paths()` switches paths to `/usr/local/bin`, `/usr/share/icons/hicolor`, `/usr/share/applications`, `/usr/local/share/gt-iconscaler` when `$EUID == 0`.
+
+Flags: `--cli`, `--gui`, `--all` (default), `-y/--yes` (non-interactive), `-h/--help`. Without a `--cli/--gui/--all` flag, `choose_components()` prompts interactively if stdin is a tty; otherwise defaults to both.
+
+Dependencies are dynamic per selection (`build_deps_list`): CLI alone needs only ImageMagick (zenity is optional — script has kdialog/yad/read fallback), GUI/both need ImageMagick + zenity. Package manager auto-detect supports apt, dnf, pacman, zypper, **apk** (Alpine), with per-PM package names (`ImageMagick` on dnf/zypper vs `imagemagick` elsewhere).
+
+Each `install_*` function gates on `INSTALL_CLI` / `INSTALL_GUI` flags. `print_summary()` shows only installed commands.
+
 ## Conventions
 
 - All shell scripts use `set -euo pipefail`. Entry scripts also set `IFS=$'\n\t'`. Preserve both.
-- `VERSION` is hardcoded as a string in each entry script (currently `2.1.0`). When bumping, update both `GT-IconScaler.sh` and `GT-IconScaler-GUI.sh`.
+- `VERSION` is hardcoded as a string in each entry script (currently `2.2.0`). When bumping, update **four** places: `GT-IconScaler.sh`, `GT-IconScaler-GUI.sh`, `banner.title` in both `i18n/{ar,en}.json` (then rebuild), and the `Installer vX.Y.Z` line in `install.sh::main()`.
 - The README is Arabic-first; both languages are first-class in i18n. Don't assume English-only.
