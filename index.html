@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GT-IconScaler — مولّد أيقونات Linux/Web/Mobile بأمر واحد</title>
+  <meta name="description" content="أداة Bash مفتوحة المصدر لتوليد 38 مقاس أيقونة عبر 8 منصات (Linux/PWA/Android/iOS/watchOS/Windows/Electron/macOS) من ملف مصدر واحد. ثنائية اللغة (عربي/إنجليزي)، CLI تفاعلي وZenity GUI، تثبيت بأمر واحد عبر curl.">
+  <meta name="author" content="GNUtux (SalehGNUTUX)">
+
+  <meta property="og:title" content="GT-IconScaler — مولّد أيقونات شامل لـ 8 منصات">
+  <meta property="og:description" content="من ملف PNG واحد إلى 38 مقاس عبر 8 منصات. CLI + GUI، ثنائية اللغة، تثبيت بأمر واحد.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="GT-IconScaler-GUI-ICON-icons/all/512x512/GT-IconScaler-GUI-ICON.png">
+  <meta property="og:url" content="https://salehgnutux.github.io/GT-IconScaler/">
+
+  <link rel="icon" type="image/png" sizes="256x256" href="GT-IconScaler-GUI-ICON-icons/all/256x256/GT-IconScaler-GUI-ICON.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="GT-IconScaler-GUI-ICON-icons/all/64x64/GT-IconScaler-GUI-ICON.png">
+
+  <style>
+    :root {
+      --bg: #fafaf9;
+      --bg-elev: #ffffff;
+      --bg-code: #1e293b;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --text-code: #e2e8f0;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-bg: #eef2ff;
+      --border: #e2e8f0;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --radius: 12px;
+      --shadow-sm: 0 1px 2px rgba(15,23,42,.06);
+      --shadow: 0 4px 16px rgba(15,23,42,.08);
+      --shadow-lg: 0 12px 40px rgba(15,23,42,.12);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0a0f1c;
+        --bg-elev: #121929;
+        --bg-code: #0a0f1c;
+        --text: #e2e8f0;
+        --text-muted: #94a3b8;
+        --accent: #818cf8;
+        --accent-hover: #a5b4fc;
+        --accent-bg: #1e1b4b;
+        --border: #1e293b;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Arabic", "Cairo", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 16px;
+    }
+    a { color: var(--accent); text-decoration: none; transition: color .15s; }
+    a:hover { color: var(--accent-hover); }
+    h1, h2, h3 { line-height: 1.25; margin: 0 0 .75em; }
+    h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); letter-spacing: -.02em; }
+    h2 { font-size: clamp(1.4rem, 3vw, 2rem); letter-spacing: -.01em; }
+    h3 { font-size: 1.15rem; }
+    p { margin: 0 0 1em; color: var(--text-muted); }
+    code, pre, kbd { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, "Courier New", monospace; direction: ltr; unicode-bidi: embed; }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
+
+    /* Hero */
+    .hero {
+      padding: 4rem 0 3rem;
+      text-align: center;
+      background: radial-gradient(ellipse at top, var(--accent-bg) 0%, var(--bg) 60%);
+    }
+    .hero-icons { display: flex; gap: 1rem; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .hero-icons img {
+      width: 96px; height: 96px;
+      filter: drop-shadow(0 8px 24px rgba(99,102,241,.25));
+      transition: transform .3s;
+    }
+    .hero-icons img:hover { transform: translateY(-4px) scale(1.05); }
+    .hero h1 { margin-bottom: .5rem; }
+    .hero-tagline { font-size: 1.15rem; color: var(--text-muted); max-width: 620px; margin: 0 auto 2rem; }
+    .badges { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; }
+    .badge {
+      display: inline-flex; align-items: center; gap: .35rem;
+      padding: .3rem .7rem; border-radius: 999px;
+      background: var(--bg-elev); border: 1px solid var(--border);
+      font-size: .85rem; color: var(--text-muted);
+    }
+    .cta { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem; }
+    .btn {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .75rem 1.5rem; border-radius: var(--radius);
+      font-weight: 600; font-size: .95rem;
+      transition: all .2s; cursor: pointer; border: none;
+      text-decoration: none;
+    }
+    .btn-primary { background: var(--accent); color: white; box-shadow: var(--shadow); }
+    .btn-primary:hover { background: var(--accent-hover); color: white; transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+    .btn-secondary { background: var(--bg-elev); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* Sections */
+    section { padding: 3rem 0; }
+    section h2 { text-align: center; margin-bottom: 2.5rem; }
+    section h2 .accent { color: var(--accent); }
+
+    /* Install block */
+    .install-card {
+      max-width: 760px; margin: 0 auto;
+      background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 2rem; box-shadow: var(--shadow);
+    }
+    .install-tabs { display: flex; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .tab {
+      padding: .5rem 1rem; border-radius: 8px; cursor: pointer;
+      background: transparent; border: 1px solid var(--border);
+      font-size: .9rem; color: var(--text-muted); transition: all .15s;
+      font-family: inherit;
+    }
+    .tab.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+    .tab:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+    .code-block {
+      position: relative;
+      background: var(--bg-code); color: var(--text-code);
+      padding: 1.25rem 1.25rem 1.25rem 4rem; border-radius: 8px;
+      overflow-x: auto; font-size: .85rem; line-height: 1.7;
+      direction: ltr; text-align: left;
+    }
+    .code-block pre { margin: 0; white-space: pre; }
+    .copy-btn {
+      position: absolute; top: .6rem; left: .6rem;
+      background: rgba(255,255,255,.08); color: var(--text-code);
+      border: 1px solid rgba(255,255,255,.15); border-radius: 6px;
+      padding: .3rem .6rem; font-size: .75rem; cursor: pointer;
+      transition: all .15s; font-family: inherit;
+    }
+    .copy-btn:hover { background: rgba(255,255,255,.18); }
+    .copy-btn.copied { background: var(--success); border-color: var(--success); color: white; }
+    .install-hint { font-size: .85rem; color: var(--text-muted); margin-top: 1rem; margin-bottom: 0; }
+
+    /* Features grid */
+    .grid {
+      display: grid; gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+    .feature {
+      background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 1.5rem; transition: all .2s;
+    }
+    .feature:hover { border-color: var(--accent); box-shadow: var(--shadow); transform: translateY(-2px); }
+    .feature-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--accent-bg); color: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; margin-bottom: .75rem;
+    }
+    .feature h3 { margin-bottom: .35rem; font-size: 1rem; }
+    .feature p { margin: 0; font-size: .9rem; }
+
+    /* Platforms */
+    .platforms {
+      display: grid; gap: .75rem;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+    .platform {
+      background: var(--bg-elev); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1rem; text-align: center;
+    }
+    .platform-name { font-weight: 600; font-size: .95rem; margin-bottom: .25rem; }
+    .platform-sizes { font-size: .8rem; color: var(--text-muted); font-family: "JetBrains Mono", monospace; direction: ltr; }
+
+    /* Versions */
+    .versions { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .version-card {
+      background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 2rem; text-align: center; transition: all .2s;
+    }
+    .version-card:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); }
+    .version-card img { width: 80px; height: 80px; margin-bottom: 1rem; }
+    .version-card h3 { font-size: 1.2rem; }
+    .version-card ul { list-style: none; padding: 0; margin: 1rem 0 0; text-align: start; }
+    .version-card li { padding: .35rem 0; color: var(--text-muted); font-size: .9rem; display: flex; gap: .5rem; }
+    .version-card li::before { content: "✓"; color: var(--success); font-weight: bold; flex-shrink: 0; }
+
+    /* Footer */
+    footer {
+      padding: 2.5rem 0; border-top: 1px solid var(--border);
+      text-align: center; color: var(--text-muted); font-size: .9rem;
+    }
+    footer .links { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1rem; }
+    footer .meta { font-size: .82rem; margin-top: .5rem; }
+
+    @media (max-width: 600px) {
+      .hero { padding: 2.5rem 0 2rem; }
+      .hero-icons img { width: 72px; height: 72px; }
+      .install-card { padding: 1.25rem; }
+      .code-block { font-size: .78rem; padding: 1rem 1rem 1rem 3.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="container">
+    <div class="hero-icons">
+      <img src="GT-IconScaler-CLI-ICON-icons/all/256x256/GT-IconScaler-CLI-ICON.png" alt="GT-IconScaler CLI">
+      <img src="GT-IconScaler-GUI-ICON-icons/all/256x256/GT-IconScaler-GUI-ICON.png" alt="GT-IconScaler GUI">
+    </div>
+    <h1>GT-IconScaler <span style="color: var(--accent);">v2.2</span></h1>
+    <p class="hero-tagline">
+      مولّد أيقونات احترافي مفتوح المصدر — من ملف PNG واحد إلى
+      <strong>38 مقاس</strong> عبر <strong>8 منصات</strong> (Linux، PWA، Android، iOS، watchOS، Windows، Electron، macOS).
+      بنية Bash نقية، ثنائية اللغة، نسختان (طرفية وZenity).
+    </p>
+    <div class="badges">
+      <span class="badge">⚙️ Bash + ImageMagick</span>
+      <span class="badge">🌐 عربي / English</span>
+      <span class="badge">📦 GPLv3</span>
+      <span class="badge">🐧 Linux</span>
+    </div>
+    <div class="cta">
+      <a href="#install" class="btn btn-primary">⚡ التثبيت السريع</a>
+      <a href="https://github.com/SalehGNUTUX/GT-IconScaler" class="btn btn-secondary" target="_blank" rel="noopener">📦 على GitHub</a>
+    </div>
+  </div>
+</header>
+
+<section id="install">
+  <div class="container">
+    <h2>التثبيت <span class="accent">بأمر واحد</span></h2>
+    <div class="install-card">
+      <div class="install-tabs">
+        <button class="tab active" data-target="cmd-interactive">تفاعلي (يسأل النسخة)</button>
+        <button class="tab" data-target="cmd-cli">CLI فقط</button>
+        <button class="tab" data-target="cmd-gui">GUI فقط</button>
+        <button class="tab" data-target="cmd-all">كلاهما</button>
+      </div>
+
+      <div class="code-block" data-cmd="cmd-interactive">
+        <button class="copy-btn" data-target="cmd-interactive">نسخ</button>
+<pre id="cmd-interactive">bash &lt;(curl -sSL https://raw.githubusercontent.com/SalehGNUTUX/GT-IconScaler/main/install.sh)</pre>
+      </div>
+
+      <div class="code-block" data-cmd="cmd-cli" style="display:none;">
+        <button class="copy-btn" data-target="cmd-cli">نسخ</button>
+<pre id="cmd-cli">bash &lt;(curl -sSL https://raw.githubusercontent.com/SalehGNUTUX/GT-IconScaler/main/install.sh) --cli -y</pre>
+      </div>
+
+      <div class="code-block" data-cmd="cmd-gui" style="display:none;">
+        <button class="copy-btn" data-target="cmd-gui">نسخ</button>
+<pre id="cmd-gui">bash &lt;(curl -sSL https://raw.githubusercontent.com/SalehGNUTUX/GT-IconScaler/main/install.sh) --gui -y</pre>
+      </div>
+
+      <div class="code-block" data-cmd="cmd-all" style="display:none;">
+        <button class="copy-btn" data-target="cmd-all">نسخ</button>
+<pre id="cmd-all">bash &lt;(curl -sSL https://raw.githubusercontent.com/SalehGNUTUX/GT-IconScaler/main/install.sh) --all -y</pre>
+      </div>
+
+      <p class="install-hint">
+        💡 المثبّت يكتشف مدير الحزم تلقائياً (apt/dnf/pacman/zypper/apk) ويُثبّت الاعتماديات الناقصة.
+        أضف <code>sudo</code> للتثبيت النظامي. لإلغاء التثبيت: استبدل <code>install.sh</code> بـ <code>uninstall.sh</code> في الأمر أعلاه.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>المميزات <span class="accent">الرئيسية</span></h2>
+    <div class="grid">
+      <div class="feature">
+        <div class="feature-icon">📐</div>
+        <h3>38 مقاس عبر 8 منصات</h3>
+        <p>تغطية شاملة من 16px إلى 1024px لكل احتياجات الأيقونات الحديثة.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🌐</div>
+        <h3>ثنائي اللغة</h3>
+        <p>عربي وإنجليزي بكشف تلقائي من <code>LANG</code> أو علم <code>--lang=</code>.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⚙️</div>
+        <h3>Batch + JSON</h3>
+        <p>وضع غير تفاعلي بـ 5 علامات، إخراج JSON واحد على stdout — مثالي لـ CI/CD.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🖥️</div>
+        <h3>نسختان</h3>
+        <p>طرفية تفاعلية + واجهة Zenity رسومية، تتشاركان نفس المكتبة.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📦</div>
+        <h3>Bash نقي</h3>
+        <p>لا Node ولا Python — فقط Bash + ImageMagick. خفيف وقابل للتدقيق.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🎨</div>
+        <h3>‎.ico و ‎.icns تلقائياً</h3>
+        <p>توليد Windows multi-size ICO وmacOS ICNS من نفس المصدر.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background: var(--bg-elev); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="container">
+    <h2>المنصات <span class="accent">المدعومة</span></h2>
+    <div class="platforms">
+      <div class="platform">
+        <div class="platform-name">🐧 Linux</div>
+        <div class="platform-sizes">hicolor XDG · 10 sizes</div>
+      </div>
+      <div class="platform">
+        <div class="platform-name">🌐 PWA</div>
+        <div class="platform-sizes">Web Manifest · 15 sizes</div>
+      </div>
+      <div class="platform">
+        <div class="platform-name">🤖 Android</div>
+        <div class="platform-sizes">mipmap · 6 densities</div>
+      </div>
+      <div class="platform">
+        <div class="platform-name">📱 iOS / iPadOS</div>
+        <div class="platform-sizes">App Icon · 15 sizes</div>
+      </div>
+      <div class="platform">
+        <div class="platform-name">⌚ watchOS</div>
+        <div class="platform-sizes">Apple Watch · 8 sizes</div>
+      </div>
+      <div class="platform">
+        <div class="platform-name">🪟 Windows Tiles</div>
+        <div class="platform-sizes">MSIX · 5 sizes</div>
+      </div>
+      <div class="platform">
+        <div class="platform-name">⚛️ Electron</div>
+        <div class="platform-sizes">AppImage · 7 sizes</div>
+      </div>
+      <div class="platform">
+        <div class="platform-name">🌍 Favicon</div>
+        <div class="platform-sizes">.ico + PNG · 3 sizes</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>نسختان <span class="accent">للاستخدام</span></h2>
+    <div class="versions">
+      <div class="version-card">
+        <img src="GT-IconScaler-CLI-ICON-icons/all/256x256/GT-IconScaler-CLI-ICON.png" alt="CLI">
+        <h3>نسخة الطرفية (CLI)</h3>
+        <p style="font-size: .9rem;">للمطورين والاستدعاء البرمجي</p>
+        <ul>
+          <li>وضع تفاعلي بـ 5 خطوات</li>
+          <li>وضع batch بـ 5 علامات</li>
+          <li>إخراج <code>--json</code> منظم</li>
+          <li>يعمل في CI/CD وScripts</li>
+          <li>file picker بـ zenity/kdialog/yad</li>
+        </ul>
+      </div>
+      <div class="version-card">
+        <img src="GT-IconScaler-GUI-ICON-icons/all/256x256/GT-IconScaler-GUI-ICON.png" alt="GUI">
+        <h3>نسخة Zenity (GUI)</h3>
+        <p style="font-size: .9rem;">للمستخدمين العاديين</p>
+        <ul>
+          <li>نوافذ رسومية بسيطة</li>
+          <li>شريط تقدم مرئي</li>
+          <li>اختيار المنصات بـ radio</li>
+          <li>لا حاجة لمعرفة الطرفية</li>
+          <li>تُفتح من قائمة البرامج</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="links">
+      <a href="https://github.com/SalehGNUTUX/GT-IconScaler" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/SalehGNUTUX/GT-IconScaler/blob/main/README.md" target="_blank" rel="noopener">التوثيق</a>
+      <a href="https://github.com/SalehGNUTUX/GT-IconScaler/blob/main/CHANGELOG.md" target="_blank" rel="noopener">سجل التغييرات</a>
+      <a href="https://github.com/SalehGNUTUX/GT-IconScaler/issues" target="_blank" rel="noopener">الإبلاغ عن مشكلة</a>
+      <a href="https://github.com/SalehGNUTUX/GT-IconScaler/blob/main/LICENSE" target="_blank" rel="noopener">الترخيص (GPL v3)</a>
+    </div>
+    <div>
+      صُنع بـ ❤️ من قِبَل <a href="https://github.com/SalehGNUTUX" target="_blank" rel="noopener">GNUtux</a>
+    </div>
+    <div class="meta">
+      v2.2.0 — آخر تحديث: 30 مايو 2026
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Tab switching
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.target;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.code-block[data-cmd]').forEach(block => {
+        block.style.display = block.dataset.cmd === target ? 'block' : 'none';
+      });
+    });
+  });
+
+  // Copy to clipboard
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const target = btn.dataset.target;
+      const text = document.getElementById(target).innerText;
+      try {
+        await navigator.clipboard.writeText(text);
+        const originalText = btn.innerText;
+        btn.innerText = '✓ نُسخ';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.innerText = originalText;
+          btn.classList.remove('copied');
+        }, 2000);
+      } catch (e) {
+        console.error('Copy failed:', e);
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
