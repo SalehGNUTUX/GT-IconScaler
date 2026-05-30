@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GT-IconScaler — مولّد أيقونات Linux/Web/Mobile بأمر واحد</title>
-  <meta name="description" content="أداة Bash مفتوحة المصدر لتوليد 38 مقاس أيقونة عبر 8 منصات (Linux/PWA/Android/iOS/watchOS/Windows/Electron/macOS) من ملف مصدر واحد. ثنائية اللغة (عربي/إنجليزي)، CLI تفاعلي وZenity GUI، تثبيت بأمر واحد عبر curl.">
+  <title>GT-IconScaler — مولّد أيقونات لجميع المنصات</title>
+  <meta name="description" content="أداة Bash مفتوحة المصدر لتوليد 38 مقاس أيقونة عبر 8 منصات من ملف مصدر واحد.">
   <meta name="author" content="GNUtux (SalehGNUTUX)">
 
-  <meta property="og:title" content="GT-IconScaler — مولّد أيقونات شامل لـ 8 منصات">
-  <meta property="og:description" content="من ملف PNG واحد إلى 38 مقاس عبر 8 منصات. CLI + GUI، ثنائية اللغة، تثبيت بأمر واحد.">
+  <meta property="og:title" content="GT-IconScaler — Universal icon generator">
+  <meta property="og:description" content="From one PNG to 38 sizes across 8 platforms. CLI + GUI, bilingual, one-line install.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="GT-IconScaler-GUI-ICON-icons/all/512x512/GT-IconScaler-GUI-ICON.png">
   <meta property="og:url" content="https://salehgnutux.github.io/GT-IconScaler/">
@@ -16,8 +16,24 @@
   <link rel="icon" type="image/png" sizes="256x256" href="GT-IconScaler-GUI-ICON-icons/all/256x256/GT-IconScaler-GUI-ICON.png">
   <link rel="icon" type="image/png" sizes="64x64" href="GT-IconScaler-GUI-ICON-icons/all/64x64/GT-IconScaler-GUI-ICON.png">
 
+  <script>
+    // تطبيق تفضيلات الـ lang/theme قبل رسم الصفحة (لتفادي الـ flash)
+    (function() {
+      var saved = localStorage.getItem('gt-lang');
+      var lang = saved || (navigator.language && navigator.language.startsWith('ar') ? 'ar' : 'en');
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+
+      var savedTheme = localStorage.getItem('gt-theme');
+      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = savedTheme || (prefersDark ? 'dark' : 'light');
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
+
   <style>
-    :root {
+    /* الوضع الفاتح (الافتراضي) */
+    :root, [data-theme="light"] {
       --bg: #fafaf9;
       --bg-elev: #ffffff;
       --bg-code: #1e293b;
@@ -29,25 +45,23 @@
       --accent-bg: #eef2ff;
       --border: #e2e8f0;
       --success: #10b981;
-      --warning: #f59e0b;
       --radius: 12px;
       --shadow-sm: 0 1px 2px rgba(15,23,42,.06);
       --shadow: 0 4px 16px rgba(15,23,42,.08);
       --shadow-lg: 0 12px 40px rgba(15,23,42,.12);
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0a0f1c;
-        --bg-elev: #121929;
-        --bg-code: #0a0f1c;
-        --text: #e2e8f0;
-        --text-muted: #94a3b8;
-        --accent: #818cf8;
-        --accent-hover: #a5b4fc;
-        --accent-bg: #1e1b4b;
-        --border: #1e293b;
-      }
+    [data-theme="dark"] {
+      --bg: #0a0f1c;
+      --bg-elev: #121929;
+      --bg-code: #050811;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #818cf8;
+      --accent-hover: #a5b4fc;
+      --accent-bg: #1e1b4b;
+      --border: #1e293b;
     }
+
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
     body {
@@ -57,6 +71,7 @@
       color: var(--text);
       line-height: 1.6;
       font-size: 16px;
+      transition: background .25s, color .25s;
     }
     a { color: var(--accent); text-decoration: none; transition: color .15s; }
     a:hover { color: var(--accent-hover); }
@@ -67,7 +82,32 @@
     p { margin: 0 0 1em; color: var(--text-muted); }
     code, pre, kbd { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, "Courier New", monospace; direction: ltr; unicode-bidi: embed; }
 
+    /* عناصر اللغة — أظهر فقط ما يطابق lang الحالي */
+    html[lang="ar"] [data-lang="en"] { display: none !important; }
+    html[lang="en"] [data-lang="ar"] { display: none !important; }
+
     .container { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
+
+    /* Topbar (lang/theme toggles) */
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(250,250,249,.85);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: .75rem 0;
+    }
+    [data-theme="dark"] .topbar { background: rgba(10,15,28,.85); }
+    .topbar-inner { display: flex; justify-content: space-between; align-items: center; }
+    .topbar-brand { font-weight: 700; font-size: .95rem; color: var(--text); display: flex; align-items: center; gap: .5rem; }
+    .topbar-brand img { width: 24px; height: 24px; }
+    .topbar-actions { display: flex; gap: .5rem; }
+    .toggle-btn {
+      background: var(--bg-elev); border: 1px solid var(--border); border-radius: 8px;
+      padding: .4rem .8rem; font-size: .85rem; cursor: pointer;
+      color: var(--text); font-family: inherit;
+      transition: all .15s; display: inline-flex; align-items: center; gap: .35rem;
+    }
+    .toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
 
     /* Hero */
     .hero {
@@ -200,10 +240,33 @@
       .hero-icons img { width: 72px; height: 72px; }
       .install-card { padding: 1.25rem; }
       .code-block { font-size: .78rem; padding: 1rem 1rem 1rem 3.5rem; }
+      .topbar-brand span { display: none; }
     }
   </style>
 </head>
 <body>
+
+<div class="topbar">
+  <div class="container topbar-inner">
+    <div class="topbar-brand">
+      <img src="GT-IconScaler-GUI-ICON-icons/all/64x64/GT-IconScaler-GUI-ICON.png" alt="">
+      <span>GT-IconScaler</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="toggle-btn" id="lang-toggle" type="button" aria-label="Toggle language">
+        <span data-lang="ar">🌐 English</span>
+        <span data-lang="en">🌐 العربية</span>
+      </button>
+      <button class="toggle-btn" id="theme-toggle" type="button" aria-label="Toggle theme">
+        <span id="theme-icon">🌙</span>
+        <span id="theme-label">
+          <span data-lang="ar">داكن</span>
+          <span data-lang="en">Dark</span>
+        </span>
+      </button>
+    </div>
+  </div>
+</div>
 
 <header class="hero">
   <div class="container">
@@ -213,57 +276,106 @@
     </div>
     <h1>GT-IconScaler <span style="color: var(--accent);">v2.2</span></h1>
     <p class="hero-tagline">
-      مولّد أيقونات احترافي مفتوح المصدر — من ملف PNG واحد إلى
-      <strong>38 مقاس</strong> عبر <strong>8 منصات</strong> (Linux، PWA، Android، iOS، watchOS، Windows، Electron، macOS).
-      بنية Bash نقية، ثنائية اللغة، نسختان (طرفية وZenity).
+      <span data-lang="ar">
+        مولّد أيقونات احترافي مفتوح المصدر — من ملف PNG واحد إلى
+        <strong>38 مقاس</strong> عبر <strong>8 منصات</strong> (Linux، PWA، Android، iOS، watchOS، Windows، Electron، macOS).
+        بنية Bash نقية، ثنائية اللغة، نسختان (طرفية وZenity).
+      </span>
+      <span data-lang="en">
+        Professional open-source icon generator — from a single PNG file to
+        <strong>38 sizes</strong> across <strong>8 platforms</strong> (Linux, PWA, Android, iOS, watchOS, Windows, Electron, macOS).
+        Pure Bash, bilingual, two versions (CLI and Zenity GUI).
+      </span>
     </p>
     <div class="badges">
       <span class="badge">⚙️ Bash + ImageMagick</span>
-      <span class="badge">🌐 عربي / English</span>
+      <span class="badge">
+        <span data-lang="ar">🌐 عربي / English</span>
+        <span data-lang="en">🌐 Arabic / English</span>
+      </span>
       <span class="badge">📦 GPLv3</span>
       <span class="badge">🐧 Linux</span>
     </div>
     <div class="cta">
-      <a href="#install" class="btn btn-primary">⚡ التثبيت السريع</a>
-      <a href="https://github.com/SalehGNUTUX/GT-IconScaler" class="btn btn-secondary" target="_blank" rel="noopener">📦 على GitHub</a>
+      <a href="#install" class="btn btn-primary">
+        <span data-lang="ar">⚡ التثبيت السريع</span>
+        <span data-lang="en">⚡ Quick Install</span>
+      </a>
+      <a href="https://github.com/SalehGNUTUX/GT-IconScaler" class="btn btn-secondary" target="_blank" rel="noopener">
+        <span data-lang="ar">📦 على GitHub</span>
+        <span data-lang="en">📦 On GitHub</span>
+      </a>
     </div>
   </div>
 </header>
 
 <section id="install">
   <div class="container">
-    <h2>التثبيت <span class="accent">بأمر واحد</span></h2>
+    <h2>
+      <span data-lang="ar">التثبيت <span class="accent">بأمر واحد</span></span>
+      <span data-lang="en">Install in <span class="accent">one command</span></span>
+    </h2>
     <div class="install-card">
       <div class="install-tabs">
-        <button class="tab active" data-target="cmd-interactive">تفاعلي (يسأل النسخة)</button>
-        <button class="tab" data-target="cmd-cli">CLI فقط</button>
-        <button class="tab" data-target="cmd-gui">GUI فقط</button>
-        <button class="tab" data-target="cmd-all">كلاهما</button>
+        <button class="tab active" data-target="cmd-interactive" type="button">
+          <span data-lang="ar">تفاعلي (يسأل النسخة)</span>
+          <span data-lang="en">Interactive</span>
+        </button>
+        <button class="tab" data-target="cmd-cli" type="button">
+          <span data-lang="ar">CLI فقط</span>
+          <span data-lang="en">CLI only</span>
+        </button>
+        <button class="tab" data-target="cmd-gui" type="button">
+          <span data-lang="ar">GUI فقط</span>
+          <span data-lang="en">GUI only</span>
+        </button>
+        <button class="tab" data-target="cmd-all" type="button">
+          <span data-lang="ar">كلاهما</span>
+          <span data-lang="en">Both</span>
+        </button>
       </div>
 
       <div class="code-block" data-cmd="cmd-interactive">
-        <button class="copy-btn" data-target="cmd-interactive">نسخ</button>
+        <button class="copy-btn" data-target="cmd-interactive" type="button">
+          <span data-lang="ar">نسخ</span>
+          <span data-lang="en">Copy</span>
+        </button>
 <pre id="cmd-interactive">bash &lt;(curl -sSL https://raw.githubusercontent.com/SalehGNUTUX/GT-IconScaler/main/install.sh)</pre>
       </div>
 
       <div class="code-block" data-cmd="cmd-cli" style="display:none;">
-        <button class="copy-btn" data-target="cmd-cli">نسخ</button>
+        <button class="copy-btn" data-target="cmd-cli" type="button">
+          <span data-lang="ar">نسخ</span>
+          <span data-lang="en">Copy</span>
+        </button>
 <pre id="cmd-cli">bash &lt;(curl -sSL https://raw.githubusercontent.com/SalehGNUTUX/GT-IconScaler/main/install.sh) --cli -y</pre>
       </div>
 
       <div class="code-block" data-cmd="cmd-gui" style="display:none;">
-        <button class="copy-btn" data-target="cmd-gui">نسخ</button>
+        <button class="copy-btn" data-target="cmd-gui" type="button">
+          <span data-lang="ar">نسخ</span>
+          <span data-lang="en">Copy</span>
+        </button>
 <pre id="cmd-gui">bash &lt;(curl -sSL https://raw.githubusercontent.com/SalehGNUTUX/GT-IconScaler/main/install.sh) --gui -y</pre>
       </div>
 
       <div class="code-block" data-cmd="cmd-all" style="display:none;">
-        <button class="copy-btn" data-target="cmd-all">نسخ</button>
+        <button class="copy-btn" data-target="cmd-all" type="button">
+          <span data-lang="ar">نسخ</span>
+          <span data-lang="en">Copy</span>
+        </button>
 <pre id="cmd-all">bash &lt;(curl -sSL https://raw.githubusercontent.com/SalehGNUTUX/GT-IconScaler/main/install.sh) --all -y</pre>
       </div>
 
       <p class="install-hint">
-        💡 المثبّت يكتشف مدير الحزم تلقائياً (apt/dnf/pacman/zypper/apk) ويُثبّت الاعتماديات الناقصة.
-        أضف <code>sudo</code> للتثبيت النظامي. لإلغاء التثبيت: استبدل <code>install.sh</code> بـ <code>uninstall.sh</code> في الأمر أعلاه.
+        <span data-lang="ar">
+          💡 المثبّت يكتشف مدير الحزم تلقائياً (apt/dnf/pacman/zypper/apk) ويُثبّت الاعتماديات الناقصة.
+          أضف <code>sudo</code> للتثبيت النظامي. لإلغاء التثبيت: استبدل <code>install.sh</code> بـ <code>uninstall.sh</code> في الأمر أعلاه.
+        </span>
+        <span data-lang="en">
+          💡 The installer auto-detects your package manager (apt/dnf/pacman/zypper/apk) and installs missing deps.
+          Prefix with <code>sudo</code> for system-wide install. To uninstall: replace <code>install.sh</code> with <code>uninstall.sh</code> in the command above.
+        </span>
       </p>
     </div>
   </div>
@@ -271,37 +383,73 @@
 
 <section>
   <div class="container">
-    <h2>المميزات <span class="accent">الرئيسية</span></h2>
+    <h2>
+      <span data-lang="ar">المميزات <span class="accent">الرئيسية</span></span>
+      <span data-lang="en">Key <span class="accent">Features</span></span>
+    </h2>
     <div class="grid">
       <div class="feature">
         <div class="feature-icon">📐</div>
-        <h3>38 مقاس عبر 8 منصات</h3>
-        <p>تغطية شاملة من 16px إلى 1024px لكل احتياجات الأيقونات الحديثة.</p>
+        <h3>
+          <span data-lang="ar">38 مقاس عبر 8 منصات</span>
+          <span data-lang="en">38 sizes across 8 platforms</span>
+        </h3>
+        <p>
+          <span data-lang="ar">تغطية شاملة من 16px إلى 1024px لكل احتياجات الأيقونات الحديثة.</span>
+          <span data-lang="en">Comprehensive coverage from 16px to 1024px for every modern icon need.</span>
+        </p>
       </div>
       <div class="feature">
         <div class="feature-icon">🌐</div>
-        <h3>ثنائي اللغة</h3>
-        <p>عربي وإنجليزي بكشف تلقائي من <code>LANG</code> أو علم <code>--lang=</code>.</p>
+        <h3>
+          <span data-lang="ar">ثنائي اللغة</span>
+          <span data-lang="en">Bilingual</span>
+        </h3>
+        <p>
+          <span data-lang="ar">عربي وإنجليزي بكشف تلقائي من <code>LANG</code> أو علم <code>--lang=</code>.</span>
+          <span data-lang="en">Arabic and English with auto-detection from <code>LANG</code> or <code>--lang=</code> flag.</span>
+        </p>
       </div>
       <div class="feature">
         <div class="feature-icon">⚙️</div>
         <h3>Batch + JSON</h3>
-        <p>وضع غير تفاعلي بـ 5 علامات، إخراج JSON واحد على stdout — مثالي لـ CI/CD.</p>
+        <p>
+          <span data-lang="ar">وضع غير تفاعلي بـ 5 علامات، إخراج JSON واحد على stdout — مثالي لـ CI/CD.</span>
+          <span data-lang="en">Non-interactive mode with 5 flags, single-line JSON output to stdout — perfect for CI/CD.</span>
+        </p>
       </div>
       <div class="feature">
         <div class="feature-icon">🖥️</div>
-        <h3>نسختان</h3>
-        <p>طرفية تفاعلية + واجهة Zenity رسومية، تتشاركان نفس المكتبة.</p>
+        <h3>
+          <span data-lang="ar">نسختان</span>
+          <span data-lang="en">Two versions</span>
+        </h3>
+        <p>
+          <span data-lang="ar">طرفية تفاعلية + واجهة Zenity رسومية، تتشاركان نفس المكتبة.</span>
+          <span data-lang="en">Interactive CLI + Zenity graphical GUI, sharing the same library.</span>
+        </p>
       </div>
       <div class="feature">
         <div class="feature-icon">📦</div>
-        <h3>Bash نقي</h3>
-        <p>لا Node ولا Python — فقط Bash + ImageMagick. خفيف وقابل للتدقيق.</p>
+        <h3>
+          <span data-lang="ar">Bash نقي</span>
+          <span data-lang="en">Pure Bash</span>
+        </h3>
+        <p>
+          <span data-lang="ar">لا Node ولا Python — فقط Bash + ImageMagick. خفيف وقابل للتدقيق.</span>
+          <span data-lang="en">No Node, no Python — just Bash + ImageMagick. Lightweight and auditable.</span>
+        </p>
       </div>
       <div class="feature">
         <div class="feature-icon">🎨</div>
-        <h3>‎.ico و ‎.icns تلقائياً</h3>
-        <p>توليد Windows multi-size ICO وmacOS ICNS من نفس المصدر.</p>
+        <h3>
+          <span data-lang="ar">‎.ico و ‎.icns تلقائياً</span>
+          <span data-lang="en">‎.ico and ‎.icns automatically</span>
+        </h3>
+        <p>
+          <span data-lang="ar">توليد Windows multi-size ICO وmacOS ICNS من نفس المصدر.</span>
+          <span data-lang="en">Generates Windows multi-size ICO and macOS ICNS from the same source.</span>
+        </p>
       </div>
     </div>
   </div>
@@ -309,7 +457,10 @@
 
 <section style="background: var(--bg-elev); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
   <div class="container">
-    <h2>المنصات <span class="accent">المدعومة</span></h2>
+    <h2>
+      <span data-lang="ar">المنصات <span class="accent">المدعومة</span></span>
+      <span data-lang="en">Supported <span class="accent">Platforms</span></span>
+    </h2>
     <div class="platforms">
       <div class="platform">
         <div class="platform-name">🐧 Linux</div>
@@ -349,30 +500,75 @@
 
 <section>
   <div class="container">
-    <h2>نسختان <span class="accent">للاستخدام</span></h2>
+    <h2>
+      <span data-lang="ar">نسختان <span class="accent">للاستخدام</span></span>
+      <span data-lang="en">Two <span class="accent">Versions</span></span>
+    </h2>
     <div class="versions">
       <div class="version-card">
         <img src="GT-IconScaler-CLI-ICON-icons/all/256x256/GT-IconScaler-CLI-ICON.png" alt="CLI">
-        <h3>نسخة الطرفية (CLI)</h3>
-        <p style="font-size: .9rem;">للمطورين والاستدعاء البرمجي</p>
+        <h3>
+          <span data-lang="ar">نسخة الطرفية (CLI)</span>
+          <span data-lang="en">CLI Version</span>
+        </h3>
+        <p style="font-size: .9rem;">
+          <span data-lang="ar">للمطورين والاستدعاء البرمجي</span>
+          <span data-lang="en">For developers and programmatic invocation</span>
+        </p>
         <ul>
-          <li>وضع تفاعلي بـ 5 خطوات</li>
-          <li>وضع batch بـ 5 علامات</li>
-          <li>إخراج <code>--json</code> منظم</li>
-          <li>يعمل في CI/CD وScripts</li>
-          <li>file picker بـ zenity/kdialog/yad</li>
+          <li>
+            <span data-lang="ar">وضع تفاعلي بـ 5 خطوات</span>
+            <span data-lang="en">Interactive mode with 5 steps</span>
+          </li>
+          <li>
+            <span data-lang="ar">وضع batch بـ 5 علامات</span>
+            <span data-lang="en">Batch mode with 5 flags</span>
+          </li>
+          <li>
+            <span data-lang="ar">إخراج <code>--json</code> منظم</span>
+            <span data-lang="en">Structured <code>--json</code> output</span>
+          </li>
+          <li>
+            <span data-lang="ar">يعمل في CI/CD وScripts</span>
+            <span data-lang="en">Works in CI/CD and scripts</span>
+          </li>
+          <li>
+            <span data-lang="ar">file picker بـ zenity/kdialog/yad</span>
+            <span data-lang="en">file picker via zenity/kdialog/yad</span>
+          </li>
         </ul>
       </div>
       <div class="version-card">
         <img src="GT-IconScaler-GUI-ICON-icons/all/256x256/GT-IconScaler-GUI-ICON.png" alt="GUI">
-        <h3>نسخة Zenity (GUI)</h3>
-        <p style="font-size: .9rem;">للمستخدمين العاديين</p>
+        <h3>
+          <span data-lang="ar">نسخة Zenity (GUI)</span>
+          <span data-lang="en">Zenity GUI Version</span>
+        </h3>
+        <p style="font-size: .9rem;">
+          <span data-lang="ar">للمستخدمين العاديين</span>
+          <span data-lang="en">For regular users</span>
+        </p>
         <ul>
-          <li>نوافذ رسومية بسيطة</li>
-          <li>شريط تقدم مرئي</li>
-          <li>اختيار المنصات بـ radio</li>
-          <li>لا حاجة لمعرفة الطرفية</li>
-          <li>تُفتح من قائمة البرامج</li>
+          <li>
+            <span data-lang="ar">نوافذ رسومية بسيطة</span>
+            <span data-lang="en">Simple graphical dialogs</span>
+          </li>
+          <li>
+            <span data-lang="ar">شريط تقدم مرئي</span>
+            <span data-lang="en">Visual progress bar</span>
+          </li>
+          <li>
+            <span data-lang="ar">اختيار المنصات بـ radio</span>
+            <span data-lang="en">Platform picker with radio buttons</span>
+          </li>
+          <li>
+            <span data-lang="ar">لا حاجة لمعرفة الطرفية</span>
+            <span data-lang="en">No terminal knowledge required</span>
+          </li>
+          <li>
+            <span data-lang="ar">تُفتح من قائمة البرامج</span>
+            <span data-lang="en">Launchable from app menu</span>
+          </li>
         </ul>
       </div>
     </div>
@@ -383,45 +579,86 @@
   <div class="container">
     <div class="links">
       <a href="https://github.com/SalehGNUTUX/GT-IconScaler" target="_blank" rel="noopener">GitHub</a>
-      <a href="https://github.com/SalehGNUTUX/GT-IconScaler/blob/main/README.md" target="_blank" rel="noopener">التوثيق</a>
-      <a href="https://github.com/SalehGNUTUX/GT-IconScaler/blob/main/CHANGELOG.md" target="_blank" rel="noopener">سجل التغييرات</a>
-      <a href="https://github.com/SalehGNUTUX/GT-IconScaler/issues" target="_blank" rel="noopener">الإبلاغ عن مشكلة</a>
-      <a href="https://github.com/SalehGNUTUX/GT-IconScaler/blob/main/LICENSE" target="_blank" rel="noopener">الترخيص (GPL v3)</a>
+      <a href="https://github.com/SalehGNUTUX/GT-IconScaler/blob/main/README.md" target="_blank" rel="noopener">
+        <span data-lang="ar">التوثيق</span><span data-lang="en">Docs</span>
+      </a>
+      <a href="https://github.com/SalehGNUTUX/GT-IconScaler/blob/main/CHANGELOG.md" target="_blank" rel="noopener">
+        <span data-lang="ar">سجل التغييرات</span><span data-lang="en">Changelog</span>
+      </a>
+      <a href="https://github.com/SalehGNUTUX/GT-IconScaler/issues" target="_blank" rel="noopener">
+        <span data-lang="ar">الإبلاغ عن مشكلة</span><span data-lang="en">Report issue</span>
+      </a>
+      <a href="https://github.com/SalehGNUTUX/GT-IconScaler/blob/main/LICENSE" target="_blank" rel="noopener">
+        <span data-lang="ar">الترخيص (GPL v3)</span><span data-lang="en">License (GPL v3)</span>
+      </a>
     </div>
     <div>
-      صُنع بـ ❤️ من قِبَل <a href="https://github.com/SalehGNUTUX" target="_blank" rel="noopener">GNUtux</a>
+      <span data-lang="ar">صُنع بـ ❤️ من قِبَل </span>
+      <span data-lang="en">Built with ❤️ by </span>
+      <a href="https://github.com/SalehGNUTUX" target="_blank" rel="noopener">GNUtux</a>
     </div>
     <div class="meta">
-      v2.2.0 — آخر تحديث: 30 مايو 2026
+      <span data-lang="ar">v2.2.0 — آخر تحديث: 30 مايو 2026</span>
+      <span data-lang="en">v2.2.0 — Last updated: May 30, 2026</span>
     </div>
   </div>
 </footer>
 
 <script>
-  // Tab switching
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      const target = tab.dataset.target;
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  // ── Language toggle ───────────────────────────────────────
+  function setLang(lang) {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    localStorage.setItem('gt-lang', lang);
+  }
+  document.getElementById('lang-toggle').addEventListener('click', function() {
+    var current = document.documentElement.lang;
+    setLang(current === 'ar' ? 'en' : 'ar');
+  });
+
+  // ── Theme toggle ──────────────────────────────────────────
+  function setTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem('gt-theme', theme);
+    document.getElementById('theme-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
+    var label = document.getElementById('theme-label');
+    label.querySelector('[data-lang="ar"]').textContent = theme === 'dark' ? 'فاتح' : 'داكن';
+    label.querySelector('[data-lang="en"]').textContent = theme === 'dark' ? 'Light' : 'Dark';
+  }
+  // sync the toggle button label to the current theme on load
+  setTheme(document.documentElement.dataset.theme || 'light');
+
+  document.getElementById('theme-toggle').addEventListener('click', function() {
+    var current = document.documentElement.dataset.theme;
+    setTheme(current === 'dark' ? 'light' : 'dark');
+  });
+
+  // ── Tab switching for install commands ────────────────────
+  document.querySelectorAll('.tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      var target = tab.dataset.target;
+      document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
       tab.classList.add('active');
-      document.querySelectorAll('.code-block[data-cmd]').forEach(block => {
+      document.querySelectorAll('.code-block[data-cmd]').forEach(function(block) {
         block.style.display = block.dataset.cmd === target ? 'block' : 'none';
       });
     });
   });
 
-  // Copy to clipboard
-  document.querySelectorAll('.copy-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const target = btn.dataset.target;
-      const text = document.getElementById(target).innerText;
+  // ── Copy to clipboard ─────────────────────────────────────
+  document.querySelectorAll('.copy-btn').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      var target = btn.dataset.target;
+      var text = document.getElementById(target).innerText;
       try {
         await navigator.clipboard.writeText(text);
-        const originalText = btn.innerText;
-        btn.innerText = '✓ نُسخ';
+        var lang = document.documentElement.lang;
+        var copiedText = lang === 'ar' ? '✓ نُسخ' : '✓ Copied';
+        var originalHTML = btn.innerHTML;
+        btn.innerHTML = copiedText;
         btn.classList.add('copied');
-        setTimeout(() => {
-          btn.innerText = originalText;
+        setTimeout(function() {
+          btn.innerHTML = originalHTML;
           btn.classList.remove('copied');
         }, 2000);
       } catch (e) {
