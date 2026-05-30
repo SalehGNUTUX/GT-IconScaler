@@ -28,6 +28,17 @@ All notable changes to this project will be documented in this file.
   terminator, foot, x-terminal-emulator, xterm). يحترم `$TERMINAL` و `xdg-terminal-exec`،
   ويولي أولوية لـ terminal الـ DE الحالي.
 
+### Installer — تحسينات جوهرية
+- **اختيار النسخة عند التثبيت** عبر علامات: `--cli` (الطرفية فقط) أو `--gui` (zenity فقط) أو `--all` (كلاهما، افتراضي).
+- **وضع تفاعلي** عند غياب العلامات: المثبت يسأل المستخدم أي نسخة يريد قبل المتابعة.
+- **`-y` / `--yes`** لتثبيت غير تفاعلي كامل (مفيد للـ CI، scripts، curl|bash).
+- **اعتماديات ديناميكية حسب الاختيار**:
+  - CLI فقط → ImageMagick (إلزامي) + zenity (موصى به، اختياري — السكربت له fallback لـ kdialog/yad/read).
+  - GUI أو كلاهما → ImageMagick + zenity (كلاهما إلزامي).
+- **اكتشاف موسَّع لمدير الحزم**: apt, dnf, pacman, zypper, **apk** (Alpine) — مع أسماء حزم صحيحة لكل واحد (`ImageMagick` لـ dnf/zypper, `imagemagick` لباقي).
+- **تثبيت تلقائي للناقص** عبر مدير الحزم المكتشف، مع `-y` للتجاوز الكامل.
+- **`install.sh --help`** يعرض الاستخدام مع أمثلة.
+
 ### Changed — تغييرات
 - `banner.title` أصبح `GT-IconScaler v2.2`.
 - `CLAUDE.md` يوثّق Batch mode وقاعدة IFS للمكتبات.

@@ -23,6 +23,8 @@
 - 🆕 **`--json` output** — سطر JSON واحد على stdout لتسهيل القراءة من برامج خارجية.
 - 🆕 **Hybrid fallback** — أي علم batch مفقود يرجع تلقائياً لخطوته التفاعلية، لا يكسر استخدام v2.1.
 - 🆕 **تثبيت بأمر واحد** عبر curl (انظر أدناه).
+- 🆕 **مثبّت ذكي**: اختر CLI أو GUI أو كلاهما (تفاعلي أو بـ `--cli/--gui/--all`)، يكتشف مدير الحزم (apt/dnf/pacman/zypper/apk) ويُثبّت الاعتماديات الناقصة تلقائياً.
+- 🆕 **CLI launcher متعدد البيئات**: عند النقر من قائمة البرامج يكتشف terminal متاح من بين 14 emulator (KDE/GNOME/XFCE/MATE/Cinnamon/LXDE/LXQt/Deepin/elementary/sway/X11).
 - 🐛 **إصلاح bug قديم**: التوزيع على المنصات الفرعية كان يفشل بصمت في بعض البيئات بسبب `IFS=$'\n\t'` (kان ينتج 46 ملف بدلاً من 111). أُصلح في `gt_distribute`.
 
 للقائمة الكاملة: [CHANGELOG.md](CHANGELOG.md).
@@ -69,10 +71,25 @@
 ## 🚀 التثبيت السريع
 
 ### الطريقة 1: أمر واحد عبر curl ⚡ (الأسهل)
+
+**تثبيت تفاعلي** — يسألك أي نسخة تريد (CLI / GUI / كلاهما):
 ```bash
 bash <(curl -sSL https://raw.githubusercontent.com/SalehGNUTUX/GT-IconScaler/main/install.sh)
 ```
-المثبّت ينسخ الريبو لمجلد مؤقت ثم يكمل التثبيت تلقائياً. أضف `sudo` في البداية لتثبيت نظامي.
+
+**اختيار صريح** — لتثبيت غير تفاعلي بنسخة محددة:
+```bash
+# نسخة الطرفية فقط (CLI + batch + --json):
+bash <(curl -sSL https://raw.githubusercontent.com/SalehGNUTUX/GT-IconScaler/main/install.sh) --cli -y
+
+# نسخة Zenity الرسومية فقط:
+bash <(curl -sSL https://raw.githubusercontent.com/SalehGNUTUX/GT-IconScaler/main/install.sh) --gui -y
+
+# كلاهما (الافتراضي إن لم تختر):
+bash <(curl -sSL https://raw.githubusercontent.com/SalehGNUTUX/GT-IconScaler/main/install.sh) --all -y
+```
+
+> أضف `sudo` في البداية لتثبيت نظامي (لجميع المستخدمين). المثبّت يكتشف مدير الحزم (apt/dnf/pacman/zypper/apk) ويُثبّت الاعتماديات الناقصة تلقائياً.
 
 ### الطريقة 2: من المستودع
 ```bash

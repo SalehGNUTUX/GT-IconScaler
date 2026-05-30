@@ -15,12 +15,61 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+BOLD='\033[1m'
 NC='\033[0m'
 
 info()    { echo -e "${BLUE}ℹ${NC} $*"; }
 success() { echo -e "${GREEN}✓${NC} $*"; }
 warn()    { echo -e "${YELLOW}⚠${NC} $*" >&2; }
 error()   { echo -e "${RED}✗${NC} $*" >&2; exit 1; }
+
+# ────────────────────────────────────────────────────────────
+# وسائط سطر الأوامر — اختيار النسخة
+# ────────────────────────────────────────────────────────────
+INSTALL_CLI=1      # افتراضياً نثبّت الاثنين
+INSTALL_GUI=1
+AUTO_YES=0         # -y → لا تسأل، استخدم الافتراضي
+
+ORIG_ARGS=("$@")   # نحفظها لتمريرها عند bootstrap_from_remote
+
+show_install_help() {
+    cat <<HELP
+GT-IconScaler Installer — usage:
+
+  install.sh                Interactive: prompts which version to install
+  install.sh --all          Install BOTH CLI and Zenity GUI (default if -y)
+  install.sh --cli          Install CLI only
+  install.sh --gui          Install Zenity GUI only
+  install.sh -y, --yes      Non-interactive: assume defaults (--all + auto-install deps)
+  install.sh -h, --help     Show this help
+
+Examples:
+  bash <(curl -sSL .../install.sh)              # interactive
+  bash <(curl -sSL .../install.sh) --cli -y     # CLI only, no prompts
+  sudo bash install.sh --all -y                 # system-wide, both, no prompts
+HELP
+}
+
+# parse flags
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --all)            INSTALL_CLI=1; INSTALL_GUI=1 ;;
+        --cli)            INSTALL_CLI=1; INSTALL_GUI=0 ;;
+        --gui)            INSTALL_CLI=0; INSTALL_GUI=1 ;;
+        -y|--yes)         AUTO_YES=1 ;;
+        -h|--help)        show_install_help; exit 0 ;;
+        *) warn "خيار غير معروف: $1 (استخدم --help)"; ;;
+    esac
+    shift
+done
+
+# علم داخلي: هل المستخدم مرّر اختياراً صريحاً؟
+EXPLICIT_CHOICE=0
+for arg in "${ORIG_ARGS[@]}"; do
+    case "$arg" in
+        --all|--cli|--gui) EXPLICIT_CHOICE=1; break ;;
+    esac
+done
 
 # ────────────────────────────────────────────────────────────
 # تحديد دليل المشروع (حيث يقع هذا السكربت)
@@ -44,6 +93,7 @@ REQUIRED_FILES=(
 
 # استنساخ الريبو لمجلد مؤقت ثم إعادة تشغيل install.sh منه
 # مُستخدَم عند: bash <(curl -sSL .../install.sh)
+# يمرّر ORIG_ARGS لينقل خيارات المستخدم (--cli/--gui/-y) للسكربت المستنسخ
 bootstrap_from_remote() {
     local repo_url="https://github.com/SalehGNUTUX/GT-IconScaler.git"
     local branch="main"
@@ -63,7 +113,36 @@ bootstrap_from_remote() {
 
     success "اكتمل التنزيل. تشغيل install.sh من النسخة المُنزَّلة..."
     echo ""
-    exec bash "$tmp_dir/install.sh" "$@"
+    exec bash "$tmp_dir/install.sh" "${ORIG_ARGS[@]}"
+}
+
+# اختيار النسخة بشكل تفاعلي إذا لم يُمرّر --cli/--gui/--all
+choose_components() {
+    # لو المستخدم مرّر اختياراً صريحاً أو -y، نحترمه
+    if [[ $EXPLICIT_CHOICE -eq 1 || $AUTO_YES -eq 1 ]]; then
+        return
+    fi
+    # لو stdin ليس tty (curl|bash بدون tty مربوط)، استخدم الافتراضي
+    if [[ ! -t 0 ]]; then
+        info "وضع غير تفاعلي — التثبيت الافتراضي (CLI + GUI)."
+        return
+    fi
+
+    echo ""
+    echo -e "${BOLD}${BLUE}ما النسخة التي تريد تثبيتها؟${NC}"
+    echo "  ${BOLD}[1]${NC} نسخة الطرفية (CLI) — تفاعلية في terminal، تدعم batch mode + JSON"
+    echo "  ${BOLD}[2]${NC} نسخة Zenity (GUI) — نوافذ رسومية تقليدية"
+    echo "  ${BOLD}[3]${NC} كلاهما (موصى به)"
+    echo ""
+    local choice
+    read -rp "  اختر [1/2/3, افتراضي: 3]: " choice
+    choice="${choice:-3}"
+    case "$choice" in
+        1) INSTALL_CLI=1; INSTALL_GUI=0; info "اختيارك: CLI فقط" ;;
+        2) INSTALL_CLI=0; INSTALL_GUI=1; info "اختيارك: GUI (zenity) فقط" ;;
+        3|*) INSTALL_CLI=1; INSTALL_GUI=1; info "اختيارك: كلاهما" ;;
+    esac
+    echo ""
 }
 
 check_source_files() {
@@ -96,31 +175,41 @@ check_source_files() {
 }
 
 # ────────────────────────────────────────────────────────────
-# كشف مدير الحزم وتثبيت المتطلبات
+# كشف مدير الحزم — يضبط: PKG_MANAGER, INSTALL_CMD, UPDATE_CMD, IM_PKG, ZENITY_PKG
 # ────────────────────────────────────────────────────────────
 detect_package_manager() {
     if command -v apt &>/dev/null; then
         PKG_MANAGER="apt"
         INSTALL_CMD="sudo apt install -y"
         UPDATE_CMD="sudo apt update"
-        PKGS="imagemagick zenity"
+        IM_PKG="imagemagick"
+        ZENITY_PKG="zenity"
     elif command -v dnf &>/dev/null; then
         PKG_MANAGER="dnf"
         INSTALL_CMD="sudo dnf install -y"
         UPDATE_CMD="sudo dnf check-update || true"
-        PKGS="ImageMagick zenity"
+        IM_PKG="ImageMagick"
+        ZENITY_PKG="zenity"
     elif command -v pacman &>/dev/null; then
         PKG_MANAGER="pacman"
         INSTALL_CMD="sudo pacman -S --noconfirm"
         UPDATE_CMD="sudo pacman -Sy"
-        PKGS="imagemagick zenity"
+        IM_PKG="imagemagick"
+        ZENITY_PKG="zenity"
     elif command -v zypper &>/dev/null; then
         PKG_MANAGER="zypper"
         INSTALL_CMD="sudo zypper install -y"
         UPDATE_CMD="sudo zypper refresh"
-        PKGS="ImageMagick zenity"
+        IM_PKG="ImageMagick"
+        ZENITY_PKG="zenity"
+    elif command -v apk &>/dev/null; then
+        PKG_MANAGER="apk"
+        INSTALL_CMD="sudo apk add"
+        UPDATE_CMD="sudo apk update"
+        IM_PKG="imagemagick"
+        ZENITY_PKG="zenity"
     else
-        error "لم أتمكن من اكتشاف مدير حزم مدعوم (apt/dnf/pacman/zypper). ثبّت ImageMagick و zenity يدوياً."
+        PKG_MANAGER=""
     fi
 }
 
@@ -129,24 +218,76 @@ has_imagemagick() {
     command -v convert &>/dev/null || command -v magick &>/dev/null
 }
 
-check_requirements() {
-    local missing=()
-    has_imagemagick || missing+=("ImageMagick")
-    command -v zenity &>/dev/null || missing+=("zenity")
+# يبني قائمة الحزم الفعلية المطلوبة بناءً على الاختيار + ما هو مفقود
+build_deps_list() {
+    detect_package_manager
+    DEPS_TO_INSTALL=()
+    DEPS_HUMAN=()      # أسماء عرض
 
-    if [[ ${#missing[@]} -eq 0 ]]; then
+    # ImageMagick — مطلوب لكلا النسختين
+    if ! has_imagemagick; then
+        if [[ -n "$PKG_MANAGER" ]]; then DEPS_TO_INSTALL+=("$IM_PKG"); fi
+        DEPS_HUMAN+=("ImageMagick (إلزامي)")
+    fi
+
+    # zenity — إلزامي للـ GUI، موصى به للـ CLI (الـ file picker)
+    if ! command -v zenity &>/dev/null; then
+        if [[ $INSTALL_GUI -eq 1 ]]; then
+            if [[ -n "$PKG_MANAGER" ]]; then DEPS_TO_INSTALL+=("$ZENITY_PKG"); fi
+            DEPS_HUMAN+=("zenity (إلزامي للـ GUI)")
+        elif [[ $INSTALL_CLI -eq 1 ]]; then
+            # CLI يعمل بدون zenity (له fallback لـ kdialog/yad/read)
+            # لكن نُبلّغ المستخدم أنه موصى به
+            DEPS_RECOMMENDED+=("zenity (اختياري للـ CLI — للـ file picker)")
+        fi
+    fi
+}
+
+check_requirements() {
+    declare -ga DEPS_TO_INSTALL=()
+    declare -ga DEPS_HUMAN=()
+    declare -ga DEPS_RECOMMENDED=()
+
+    build_deps_list
+
+    if [[ ${#DEPS_HUMAN[@]} -eq 0 && ${#DEPS_RECOMMENDED[@]} -eq 0 ]]; then
         success "جميع المتطلبات موجودة مسبقاً."
         return 0
     fi
 
-    warn "المتطلبات التالية غير مثبتة: ${missing[*]}"
-    read -rp "هل تريد تثبيتها تلقائياً؟ (y/n): " answer
+    # عرض الاعتماديات الموصى بها (لا توقف، فقط تنبيه)
+    if [[ ${#DEPS_RECOMMENDED[@]} -gt 0 ]]; then
+        warn "اعتمادية موصى بها (اختيارية):"
+        printf "  • %s\n" "${DEPS_RECOMMENDED[@]}"
+    fi
+
+    # لا اعتماديات إلزامية مفقودة؟ نكمل
+    if [[ ${#DEPS_HUMAN[@]} -eq 0 ]]; then
+        return 0
+    fi
+
+    warn "المتطلبات الإلزامية الناقصة:"
+    printf "  • %s\n" "${DEPS_HUMAN[@]}"
+    echo ""
+
+    if [[ -z "$PKG_MANAGER" ]]; then
+        error "لم أتمكن من اكتشاف مدير حزم مدعوم (apt/dnf/pacman/zypper/apk). ثبّت المتطلبات يدوياً."
+    fi
+
+    info "مدير الحزم المكتشف: $PKG_MANAGER → سيُثبَّت: ${DEPS_TO_INSTALL[*]}"
+
+    local answer="y"
+    if [[ $AUTO_YES -eq 0 && -t 0 ]]; then
+        read -rp "هل تريد تثبيتها تلقائياً عبر $PKG_MANAGER؟ (Y/n): " answer
+        answer="${answer:-y}"
+    fi
+
     if [[ "$answer" =~ ^[Yy]$ ]]; then
-        detect_package_manager
         info "تحديث قائمة الحزم..."
-        $UPDATE_CMD
-        info "تثبيت: $PKGS"
-        $INSTALL_CMD $PKGS
+        $UPDATE_CMD || warn "تعذّر تحديث الفهرس — أحاول التثبيت رغم ذلك..."
+        info "تثبيت: ${DEPS_TO_INSTALL[*]}"
+        $INSTALL_CMD "${DEPS_TO_INSTALL[@]}" || error "فشل تثبيت الاعتماديات. ثبّتها يدوياً ثم أعد المحاولة."
+        success "تم تثبيت الاعتماديات."
     else
         error "ثبّت المتطلبات يدوياً ثم أعد تشغيل المثبت."
     fi
@@ -188,10 +329,14 @@ setup_install_paths() {
 # تثبيت السكربتات (CLI + GUI)
 # ────────────────────────────────────────────────────────────
 install_scripts() {
-    install -m 755 "$SCRIPT_DIR/GT-IconScaler.sh"     "$BIN_DIR/gt-iconscaler"
-    install -m 755 "$SCRIPT_DIR/GT-IconScaler-GUI.sh" "$BIN_DIR/gt-iconscaler-gui"
-    success "ثبّت: $BIN_DIR/gt-iconscaler"
-    success "ثبّت: $BIN_DIR/gt-iconscaler-gui"
+    if [[ $INSTALL_CLI -eq 1 ]]; then
+        install -m 755 "$SCRIPT_DIR/GT-IconScaler.sh" "$BIN_DIR/gt-iconscaler"
+        success "ثبّت: $BIN_DIR/gt-iconscaler"
+    fi
+    if [[ $INSTALL_GUI -eq 1 ]]; then
+        install -m 755 "$SCRIPT_DIR/GT-IconScaler-GUI.sh" "$BIN_DIR/gt-iconscaler-gui"
+        success "ثبّت: $BIN_DIR/gt-iconscaler-gui"
+    fi
 }
 
 # ────────────────────────────────────────────────────────────
@@ -201,6 +346,7 @@ install_scripts() {
 #  في KDE/GNOME عندما لا يكون default terminal مضبوطاً)
 # ────────────────────────────────────────────────────────────
 install_cli_launcher() {
+    [[ $INSTALL_CLI -eq 1 ]] || return 0
     local launcher="$BIN_DIR/gt-iconscaler-cli-launcher"
     cat > "$launcher" << 'LAUNCHER_EOF'
 #!/usr/bin/env bash
@@ -302,17 +448,22 @@ install_icons() {
     # الأحجام القياسية المعتمدة في FreeDesktop hicolor
     local sizes=(16 22 24 32 48 64 96 128 256 512)
 
-    # خريطة: اسم_الأيقونة_في_النظام → مجلد_مصدر_الأيقونة
-    declare -A icon_sources=(
-        ["gt-iconscaler-cli"]="$SCRIPT_DIR/GT-IconScaler-CLI-ICON-icons/all"
-        ["gt-iconscaler-gui"]="$SCRIPT_DIR/GT-IconScaler-GUI-ICON-icons/all"
-    )
-    declare -A icon_filenames=(
-        ["gt-iconscaler-cli"]="GT-IconScaler-CLI-ICON.png"
-        ["gt-iconscaler-gui"]="GT-IconScaler-GUI-ICON.png"
-    )
+    # نبني قائمة الأيقونات بناءً على الاختيار
+    local icon_names=()
+    declare -A icon_sources=()
+    declare -A icon_filenames=()
+    if [[ $INSTALL_CLI -eq 1 ]]; then
+        icon_names+=("gt-iconscaler-cli")
+        icon_sources["gt-iconscaler-cli"]="$SCRIPT_DIR/GT-IconScaler-CLI-ICON-icons/all"
+        icon_filenames["gt-iconscaler-cli"]="GT-IconScaler-CLI-ICON.png"
+    fi
+    if [[ $INSTALL_GUI -eq 1 ]]; then
+        icon_names+=("gt-iconscaler-gui")
+        icon_sources["gt-iconscaler-gui"]="$SCRIPT_DIR/GT-IconScaler-GUI-ICON-icons/all"
+        icon_filenames["gt-iconscaler-gui"]="GT-IconScaler-GUI-ICON.png"
+    fi
 
-    for icon_name in "${!icon_sources[@]}"; do
+    for icon_name in "${icon_names[@]}"; do
         local src_dir="${icon_sources[$icon_name]}"
         local src_file="${icon_filenames[$icon_name]}"
 
@@ -337,22 +488,24 @@ install_icons() {
 # تثبيت ملفات .desktop (مع تعديل Exec للمسار الصحيح)
 # ────────────────────────────────────────────────────────────
 install_desktop_entries() {
-    local cli_desktop="$DESKTOP_DIR/gt-iconscaler-cli.desktop"
-    local gui_desktop="$DESKTOP_DIR/gt-iconscaler-gui.desktop"
+    if [[ $INSTALL_CLI -eq 1 ]]; then
+        local cli_desktop="$DESKTOP_DIR/gt-iconscaler-cli.desktop"
+        # CLI: يستخدم wrapper launcher بدل الاعتماد على Terminal=true
+        # لأن KDE/GNOME قد لا يجدا default terminal فيظهر "لا يحدث شيء"
+        install -m 644 "$SCRIPT_DIR/gt-iconscaler-cli.desktop" "$cli_desktop"
+        sed -i "s|^Exec=.*|Exec=${BIN_DIR}/gt-iconscaler-cli-launcher|"       "$cli_desktop"
+        sed -i "s|^TryExec=.*|TryExec=${BIN_DIR}/gt-iconscaler-cli-launcher|" "$cli_desktop"
+        sed -i "s|^Terminal=true|Terminal=false|"                              "$cli_desktop"
+        success "ثبّت: $cli_desktop"
+    fi
 
-    # CLI: يستخدم wrapper launcher بدل الاعتماد على Terminal=true
-    # لأن KDE/GNOME قد لا يجدا default terminal فيظهر "لا يحدث شيء"
-    install -m 644 "$SCRIPT_DIR/gt-iconscaler-cli.desktop" "$cli_desktop"
-    sed -i "s|^Exec=.*|Exec=${BIN_DIR}/gt-iconscaler-cli-launcher|"       "$cli_desktop"
-    sed -i "s|^TryExec=.*|TryExec=${BIN_DIR}/gt-iconscaler-cli-launcher|" "$cli_desktop"
-    sed -i "s|^Terminal=true|Terminal=false|"                              "$cli_desktop"
-
-    # GUI: Exec المباشر لـ zenity-based script (لا حاجة لـ wrapper)
-    install -m 644 "$SCRIPT_DIR/gt-iconscaler-gui.desktop" "$gui_desktop"
-    sed -i "s|^Exec=.*|Exec=${BIN_DIR}/gt-iconscaler-gui|" "$gui_desktop"
-
-    success "ثبّت: $cli_desktop"
-    success "ثبّت: $gui_desktop"
+    if [[ $INSTALL_GUI -eq 1 ]]; then
+        local gui_desktop="$DESKTOP_DIR/gt-iconscaler-gui.desktop"
+        # GUI: Exec المباشر لـ zenity-based script (لا حاجة لـ wrapper)
+        install -m 644 "$SCRIPT_DIR/gt-iconscaler-gui.desktop" "$gui_desktop"
+        sed -i "s|^Exec=.*|Exec=${BIN_DIR}/gt-iconscaler-gui|" "$gui_desktop"
+        success "ثبّت: $gui_desktop"
+    fi
 }
 
 # ────────────────────────────────────────────────────────────
@@ -379,11 +532,11 @@ print_summary() {
     echo -e "${GREEN} تم تثبيت GT-IconScaler بنجاح!${NC}"
     echo -e "${GREEN}========================================${NC}"
     echo -e "  ${BLUE}الأوامر المتاحة:${NC}"
-    echo -e "    • ${GREEN}gt-iconscaler${NC}      - النسخة الطرفية"
-    echo -e "    • ${GREEN}gt-iconscaler-gui${NC}  - النسخة الرسومية"
+    [[ $INSTALL_CLI -eq 1 ]] && echo -e "    • ${GREEN}gt-iconscaler${NC}      - النسخة الطرفية (CLI، تفاعلية + batch + --json)"
+    [[ $INSTALL_GUI -eq 1 ]] && echo -e "    • ${GREEN}gt-iconscaler-gui${NC}  - النسخة الرسومية (Zenity)"
     echo ""
     echo -e "  ${YELLOW}ملاحظة:${NC} إذا لم تظهر الأيقونات في قائمة البرامج فوراً، سجّل الخروج والدخول"
-    echo "          (أو أعد تشغيل GNOME Shell بـ Alt+F2 → r)"
+    echo "          (أو على GNOME: Alt+F2 → r، أو على KDE: kbuildsycoca6)"
     echo ""
 }
 
@@ -391,10 +544,11 @@ print_summary() {
 # البرنامج الرئيسي
 # ────────────────────────────────────────────────────────────
 main() {
-    echo -e "${BLUE}GT-IconScaler Installer v2.2.0${NC}"
+    echo -e "${BLUE}${BOLD}GT-IconScaler Installer v2.2.0${NC}"
     echo ""
 
-    check_source_files "$@"
+    check_source_files "${ORIG_ARGS[@]}"
+    choose_components
     check_requirements
     setup_install_paths
     install_scripts
@@ -406,4 +560,4 @@ main() {
     print_summary
 }
 
-main "$@"
+main
